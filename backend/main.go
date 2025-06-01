@@ -9,12 +9,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 )
 
 var store Store
 
 func main() {
 	ctx := context.Background()
+
 
 	url := os.Getenv("DATABASE_URL")
 	if url == "" {
@@ -39,6 +41,7 @@ func main() {
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 func setupRouter(s Store) *gin.Engine {
@@ -49,6 +52,7 @@ func setupRouter(s Store) *gin.Engine {
 	r.POST("/messages", authMiddleware, postMessageHandler)
 	r.GET("/feed", authMiddleware, feedHandler)
 	return r
+
 }
 
 type User struct {
@@ -85,7 +89,9 @@ func loginHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
+
 	id, err := store.GetUserByCredentials(c, u.Username, u.Password)
+
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
@@ -117,10 +123,12 @@ func postMessageHandler(c *gin.Context) {
 	var uid int64
 	fmt.Sscanf(userIDStr, "%d", &uid)
 	msg, err := store.CreateMessage(c, uid, body.Content)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, msg)
 }
 
@@ -139,9 +147,12 @@ func feedHandler(c *gin.Context) {
 func generateTraffic(ctx context.Context) {
 	for {
 		time.Sleep(5 * time.Second)
+    
 		_, err := store.CreateMessage(ctx, 1, fmt.Sprintf("random post #%d", time.Now().UnixNano()))
+
 		if err != nil {
 			log.Println("traffic error:", err)
 		}
 	}
 }
+

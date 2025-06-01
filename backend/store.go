@@ -55,11 +55,13 @@ func (p *pgStore) ListMessages(ctx context.Context, userID int64, limit int) ([]
 	}
 	defer rows.Close()
 	var msgs []Message
+
 	for rows.Next() {
 		var m Message
 		if err := rows.Scan(&m.ID, &m.UserID, &m.Content, &m.CreatedAt); err != nil {
 			return nil, err
 		}
+
 		msgs = append(msgs, m)
 	}
 	return msgs, nil
@@ -110,3 +112,4 @@ func (m *memoryStore) ListMessages(ctx context.Context, userID int64, limit int)
 }
 
 func (m *memoryStore) Close() {}
+

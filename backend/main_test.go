@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
 )
 
 func TestHandlers(t *testing.T) {
@@ -59,5 +60,6 @@ func TestHandlers(t *testing.T) {
 	}
 	if len(msgs) != 1 || msgs[0].Content != "hello" {
 		t.Fatalf("unexpected feed: %+v", msgs)
+
 	}
 }

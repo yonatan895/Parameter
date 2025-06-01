@@ -18,15 +18,14 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 
 
 ## Quickstart
-Run the provided script to build the Docker images, start Minikube with the
-Docker driver and deploy everything:
+Run the provided `setup.sh` script to spin up the entire stack:
 
 ```bash
+chmod +x setup.sh  # make sure the script is executable
 ./setup.sh
 ```
 The script will ensure you are in the `docker` group, run `go mod tidy` to
 download backend dependencies, build the images and load the database schema.
-
 
 ## Backend
 The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
@@ -60,6 +59,8 @@ The steps below outline what the script performs manually.
    ```bash
    eval $(minikube docker-env)
 
+
+   (cd backend && go mod tidy)
    docker build -t backend:latest ./backend
    docker build -t frontend:latest ./frontend
    ```
@@ -93,6 +94,14 @@ After Postgres is running you can create the tables using the provided schema:
 kubectl exec -it deployment/postgres -- psql -U user -d twitter -f /schema.sql
 ```
 Adjust credentials if you changed them in `values.yaml`.
+
+## Testing
+The backend includes unit tests for the HTTP handlers. Run them with:
+```bash
+cd backend
+go test ./...
+```
+Frontend tests can be added using your favourite framework (for example Jest with React Testing Library).
 
 ## Notes
 This project is intentionally simple and aims to provide a starting point. Feel free to extend authentication, add more APIs, or integrate Kafka consumers and producers for real-time updates.
