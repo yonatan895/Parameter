@@ -16,12 +16,13 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 - [Helm](https://helm.sh/)
 - [ArgoCD](https://argo-cd.readthedocs.io/)
 
+
 ## Quickstart
 Run the provided helper script to build the images, start Minikube using the
 Docker driver, deploy the Helm chart and load the database schema:
 
 ```bash
-./setup.sh
+bash setup.sh
 ```
 
 The script ensures your user belongs to the `docker` group and may request you
@@ -33,6 +34,7 @@ The backend lives in `backend/` and exposes a small REST API using Gin. Configur
 ### Build image
 ```bash
 cd backend
+
 go mod tidy # generates go.sum
 docker build -t backend:latest .
 ```
@@ -55,8 +57,10 @@ docker build -t frontend:latest .
    ```
 2. Load images into the cluster (or push them to a registry accessible by the cluster):
    ```bash
-   eval $(minikube docker-env)
+
+   eval $(minikube docker-env --shell bash)
    (cd backend && go mod tidy)
+
    docker build -t backend:latest ./backend
    docker build -t frontend:latest ./frontend
    ```

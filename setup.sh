@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -5,7 +6,7 @@ set -euo pipefail
 if ! groups $USER | grep -q docker; then
   echo "Adding $USER to docker group. Please log out and log back in, then re-run this script."
   sudo usermod -aG docker $USER && newgrp docker
-fi
+
 
 # Start minikube with docker driver
 minikube start --driver=docker
