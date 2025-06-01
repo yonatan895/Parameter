@@ -42,7 +42,7 @@ The backend lives in `backend/` and exposes a small REST API using Gin. Configur
 ### Build image
 ```bash
 cd backend
-go mod tidy                # generates go.sum
+go mod tidy # ensure dependencies
 docker build -t backend:latest .
 ```
 
@@ -68,6 +68,7 @@ The steps below outline what the script performs manually.
    ```bash
    eval $(minikube docker-env)
 
+   (cd backend && go mod tidy)
    docker build -t backend:latest ./backend
    docker build -t frontend:latest ./frontend
    ```
