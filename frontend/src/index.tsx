@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import ReactDOM from 'react-dom';
+
+import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 
+interface Message {
+  id: number;
+  content: string;
+}
+
 function App() {
-  const [feed, setFeed] = useState<any[]>([]);
+  const [feed, setFeed] = useState<Message[]>([]);
   const [content, setContent] = useState('');
 
   useEffect(() => {
@@ -28,7 +34,13 @@ function App() {
   return (
     <div>
       <h1>Twitter Clone</h1>
-      <input value={content} onChange={(e) => setContent(e.target.value)} />
+      <input
+        value={content}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setContent(e.target.value)
+        }
+      />
+
       <button onClick={submit}>Post</button>
       {feed.map((m) => (
         <div key={m.id}>{m.content}</div>
@@ -37,4 +49,8 @@ function App() {
   );
 }
 
-ReactDOM.render(<App />, document.getElementById('root'));
+const container = document.getElementById('root');
+if (container) {
+  const root = createRoot(container);
+  root.render(<App />);
+}

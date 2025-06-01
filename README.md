@@ -16,13 +16,25 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 - [Helm](https://helm.sh/)
 - [ArgoCD](https://argo-cd.readthedocs.io/)
 
+
+## Quickstart
+With all prerequisites installed you can deploy everything locally with the
+helper script:
+
+```bash
+./setup.sh
+```
+
+The script starts Minikube if necessary, builds the backend and frontend images,
+installs the Helm chart and initializes the database.
+
 ## Backend
 The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
 
 ### Build image
 ```bash
 cd backend
-go mod tidy
+go mod tidy # generate go.sum
 docker build -t backend:latest .
 ```
 
@@ -38,6 +50,9 @@ docker build -t frontend:latest .
 ```
 
 ## Running locally with Minikube
+The following steps detail the manual process. They are all executed
+automatically when running `./setup.sh`.
+
 1. Start minikube:
    ```bash
    minikube start
