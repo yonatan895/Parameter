@@ -42,6 +42,7 @@ func main() {
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 type User struct {
@@ -64,6 +65,7 @@ func registerHandler(c *gin.Context) {
 		return
 	}
 	created, err := store.CreateUser(c, u.Username, u.Password)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -130,6 +132,7 @@ func feedHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, feed)
 }
+
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
