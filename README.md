@@ -15,8 +15,17 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) and [minikube](https://minikube.sigs.k8s.io/docs/) or any Kubernetes cluster
 - [Helm](https://helm.sh/)
 - [ArgoCD](https://argo-cd.readthedocs.io/)
+
+
 ## Quickstart
-Run `bash setup.sh` to automatically start minikube, build the images and deploy the chart.
+Run the provided script to build the Docker images, start Minikube with the
+Docker driver and deploy everything:
+
+```bash
+./setup.sh
+```
+The script will ensure you are in the `docker` group, generate `go.sum` with
+`go mod tidy` if needed, build the images and load the database schema.
 
 
 ## Backend
@@ -25,7 +34,6 @@ The backend lives in `backend/` and exposes a small REST API using Gin. Configur
 ### Build image
 ```bash
 cd backend
-go mod tidy # generate go.sum
 docker build -t backend:latest .
 ```
 
@@ -41,13 +49,16 @@ docker build -t frontend:latest .
 ```
 
 ## Running locally with Minikube
+The easiest way to run everything is with the `setup.sh` script described above.
+The steps below outline what the script performs manually.
 1. Start minikube:
    ```bash
-   minikube start --driver=docker
+   minikube start
    ```
 2. Load images into the cluster (or push them to a registry accessible by the cluster):
    ```bash
-   eval $(minikube docker-env --shell bash)
+   eval $(minikube docker-env)
+
    docker build -t backend:latest ./backend
    docker build -t frontend:latest ./frontend
    ```
