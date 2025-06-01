@@ -24,8 +24,8 @@ Docker driver and deploy everything:
 ```bash
 ./setup.sh
 ```
-The script will ensure you are in the `docker` group, generate `go.sum` with
-`go mod tidy` if needed, build the images and load the database schema.
+The script will ensure you are in the `docker` group, run `go mod tidy` to
+download backend dependencies, build the images and load the database schema.
 
 
 ## Backend
@@ -34,6 +34,7 @@ The backend lives in `backend/` and exposes a small REST API using Gin. Configur
 ### Build image
 ```bash
 cd backend
+go mod tidy
 docker build -t backend:latest .
 ```
 
@@ -77,7 +78,14 @@ The steps below outline what the script performs manually.
    ```bash
    kubectl apply -f helm-chart/argocd-app.yaml
    ```
-   ArgoCD will then deploy the chart and keep it in sync with the repository.
+  ArgoCD will then deploy the chart and keep it in sync with the repository.
+
+## Testing
+Run the backend unit tests with Go:
+```bash
+cd backend
+go test ./...
+```
 
 ## Database setup
 After Postgres is running you can create the tables using the provided schema:
