@@ -18,15 +18,19 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 
 
 ## Quickstart
-With all prerequisites installed you can deploy everything locally with the
-helper script:
+The `setup.sh` script automates local deployment. It adds your user to the
+`docker` group, starts minikube with the Docker driver, builds images, deploys
+the Helm chart and initializes the database.
 
 ```bash
 ./setup.sh
 ```
 
-The script starts Minikube if necessary, builds the backend and frontend images,
-installs the Helm chart and initializes the database.
+Once complete, access the frontend with:
+
+```bash
+minikube service frontend --url
+```
 
 ## Backend
 The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
@@ -34,7 +38,7 @@ The backend lives in `backend/` and exposes a small REST API using Gin. Configur
 ### Build image
 ```bash
 cd backend
-go mod tidy # generate go.sum
+go mod tidy   # generate go.sum
 docker build -t backend:latest .
 ```
 
@@ -50,12 +54,10 @@ docker build -t frontend:latest .
 ```
 
 ## Running locally with Minikube
-The following steps detail the manual process. They are all executed
-automatically when running `./setup.sh`.
-
-1. Start minikube:
+The following manual steps mirror what `setup.sh` does automatically.
+1. Start minikube (using the Docker driver):
    ```bash
-   minikube start
+   minikube start --driver=docker
    ```
 2. Load images into the cluster (or push them to a registry accessible by the cluster):
    ```bash
@@ -65,7 +67,7 @@ automatically when running `./setup.sh`.
    ```
 3. Deploy the stack using Helm:
    ```bash
-   helm install twitter-clone ./helm-chart
+   helm upgrade --install twitter-clone ./helm-chart
    ```
 4. Access the frontend:
    ```bash

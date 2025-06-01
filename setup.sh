@@ -1,37 +1,28 @@
-#!/bin/bash
-set -e
 
-# start minikube if not running
-if ! minikube status >/dev/null 2>&1; then
-  echo "Starting minikube..."
-  minikube start
-fi
+#!/usr/bin/env bash
+set -euo pipefail
 
-# use minikube docker env
+# Ensure current user can run docker
+sudo usermod -aG docker $USER && newgrp docker
+
+# Start minikube with docker driver
+minikube start --driver=docker
+
+# Use docker from minikube
 eval $(minikube docker-env)
 
-# build backend image
-pushd backend >/dev/null
-if command -v go >/dev/null 2>&1; then
-  go mod tidy
-fi
-docker build -t backend:latest .
-popd >/dev/null
+# Build Docker images
+docker build -t backend:latest ./backend
+docker build -t frontend:latest ./frontend
 
-# build frontend image
-pushd frontend >/dev/null
-if command -v npm >/dev/null 2>&1; then
-  npm install
-  npm run build
-fi
-docker build -t frontend:latest .
-popd >/dev/null
-
-# deploy via helm
+# Deploy services using Helm
 helm upgrade --install twitter-clone ./helm-chart
 
-# apply database schema
-kubectl rollout status deployment/postgres --timeout=120s
-kubectl exec -i deployment/postgres -- psql -U user -d twitter < backend/schema.sql
+# Wait for postgres pod to be ready
+kubectl wait --for=condition=ready pod -l app=postgres --timeout=120s
 
-echo "Deployment complete. Access the frontend with: $(minikube service frontend --url)"
+# Load database schema
+POSTGRES_POD=$(kubectl get pods -l app=postgres -o jsonpath='{.items[0].metadata.name}')
+kubectl cp backend/schema.sql "$POSTGRES_POD":/schema.sql
+kubectl exec "$POSTGRES_POD" -- psql -U user -d twitter -f /schema.sql
+
