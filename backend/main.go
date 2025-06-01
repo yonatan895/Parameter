@@ -5,22 +5,34 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var store Store
+var (
+	db    *pgxpool.Pool
+	store Store
+)
 
 func main() {
 	ctx := context.Background()
 
-	var err error
-	store, err = newPGStore(ctx)
-	if err != nil {
-		log.Fatalf("failed to connect to store: %v", err)
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "postgres://user:password@localhost:5432/twitter"
 	}
-	defer store.Close()
+
+	var err error
+	db, err = pgxpool.New(ctx, dsn)
+	if err != nil {
+		log.Fatalf("failed to connect to postgres: %v", err)
+	}
+	defer db.Close()
+	store = newPGStore(db)
 
 	go generateTraffic(ctx)
 
@@ -30,15 +42,7 @@ func main() {
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
 	}
-}
 
-func setupRouter() *gin.Engine {
-	r := gin.Default()
-	r.POST("/register", registerHandler)
-	r.POST("/login", loginHandler)
-	r.POST("/messages", authMiddleware, postMessageHandler)
-	r.GET("/feed", authMiddleware, feedHandler)
-	return r
 }
 
 type User struct {
@@ -60,14 +64,13 @@ func registerHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	id, err := store.CreateUser(c, u.Username, u.Password)
+	created, err := store.CreateUser(c, u.Username, u.Password)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	u.ID = id
-	c.JSON(http.StatusOK, u)
+	c.JSON(http.StatusOK, created)
 }
 
 func loginHandler(c *gin.Context) {
@@ -76,14 +79,13 @@ func loginHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	id, err := store.GetUserID(c, u.Username, u.Password)
+	found, err := store.GetUserByCredentials(c, u.Username, u.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
-	u.ID = id
-	http.SetCookie(c.Writer, &http.Cookie{Name: "session", Value: fmt.Sprint(u.ID), Path: "/"})
-	c.JSON(http.StatusOK, u)
+	http.SetCookie(c.Writer, &http.Cookie{Name: "session", Value: fmt.Sprint(found.ID), Path: "/"})
+	c.JSON(http.StatusOK, found)
 }
 
 func authMiddleware(c *gin.Context) {
@@ -97,15 +99,18 @@ func authMiddleware(c *gin.Context) {
 }
 
 func postMessageHandler(c *gin.Context) {
-	userIDStr := c.GetString("userID")
-	var userID int64
-	fmt.Sscanf(userIDStr, "%d", &userID)
+	userID := c.GetString("userID")
 	var m Message
 	if err := c.BindJSON(&m); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	msg, err := store.CreateMessage(c, userID, m.Content)
+	id, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user"})
+		return
+	}
+	msg, err := store.CreateMessage(c, id, m.Content)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -114,10 +119,13 @@ func postMessageHandler(c *gin.Context) {
 }
 
 func feedHandler(c *gin.Context) {
-	userIDStr := c.GetString("userID")
-	var userID int64
-	fmt.Sscanf(userIDStr, "%d", &userID)
-	feed, err := store.GetFeed(c, userID)
+	userID := c.GetString("userID")
+	id, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user"})
+		return
+	}
+	feed, err := store.GetFeed(c, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -125,14 +133,20 @@ func feedHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, feed)
 }
 
+
+func setupRouter() *gin.Engine {
+	r := gin.Default()
+	r.POST("/register", registerHandler)
+	r.POST("/login", loginHandler)
+	r.POST("/messages", authMiddleware, postMessageHandler)
+	r.GET("/feed", authMiddleware, feedHandler)
+	return r
+}
+
 func generateTraffic(ctx context.Context) {
-	pg, ok := store.(*pgStore)
-	if !ok {
-		return
-	}
 	for {
 		time.Sleep(5 * time.Second)
-		_, err := pg.db.Exec(ctx, "INSERT INTO messages (user_id, content) SELECT id, 'random post #' || floor(random()*1000)::int FROM users")
+		_, err := db.Exec(ctx, "INSERT INTO messages (user_id, content) SELECT id, 'random post #' || floor(random()*1000)::int FROM users")
 		if err != nil {
 			log.Println("traffic error:", err)
 		}
