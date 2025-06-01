@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 
@@ -39,6 +40,7 @@ function App() {
           setContent(e.target.value)
         }
       />
+
       <button onClick={submit}>Post</button>
       {feed.map((m) => (
         <div key={m.id}>{m.content}</div>

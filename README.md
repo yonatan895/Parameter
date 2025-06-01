@@ -16,6 +16,7 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 - [Helm](https://helm.sh/)
 - [ArgoCD](https://argo-cd.readthedocs.io/)
 
+
 ## Quickstart
 With all prerequisites installed you can deploy everything locally with the
 helper script:
@@ -51,6 +52,7 @@ docker build -t frontend:latest .
 ## Running locally with Minikube
 The following steps detail the manual process. They are all executed
 automatically when running `./setup.sh`.
+
 1. Start minikube:
    ```bash
    minikube start
