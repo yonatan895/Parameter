@@ -9,10 +9,8 @@ if ! groups $USER_NAME | grep -q '\bdocker\b'; then
   sudo usermod -aG docker $USER_NAME && newgrp docker
 fi
 
-# Ensure Go modules are downloaded
-if [ ! -f backend/go.sum ]; then
-  (cd backend && go mod tidy)
-fi
+# Run go mod tidy so dependencies are available
+(cd backend && go mod tidy)
 
 # Start minikube with docker driver
 minikube start --driver=docker
