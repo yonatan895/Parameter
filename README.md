@@ -24,17 +24,8 @@ Run the provided `setup.sh` script to spin up the entire stack:
 chmod +x setup.sh  # make sure the script is executable
 ./setup.sh
 ```
-
-The script performs the following steps:
-
-1. Verifies Docker permissions and adds you to the `docker` group if required.
-2. Starts Minikube using the Docker driver.
-3. Exports Minikube's Docker environment and builds the `backend` and
-   `frontend` images so they are available inside the cluster.
-4. Deploys the Helm chart located in `helm-chart/`.
-5. Waits for the Postgres pod to be ready and loads `backend/schema.sql` into
-   the database.
-
+The script will ensure you are in the `docker` group, run `go mod tidy` to
+download backend dependencies, build the images and load the database schema.
 
 ## Backend
 The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
@@ -42,7 +33,7 @@ The backend lives in `backend/` and exposes a small REST API using Gin. Configur
 ### Build image
 ```bash
 cd backend
-go mod tidy # ensure dependencies
+go mod tidy
 docker build -t backend:latest .
 ```
 
@@ -88,7 +79,14 @@ The steps below outline what the script performs manually.
    ```bash
    kubectl apply -f helm-chart/argocd-app.yaml
    ```
-   ArgoCD will then deploy the chart and keep it in sync with the repository.
+  ArgoCD will then deploy the chart and keep it in sync with the repository.
+
+## Testing
+Run the backend unit tests with Go:
+```bash
+cd backend
+go test ./...
+```
 
 ## Database setup
 After Postgres is running you can create the tables using the provided schema:

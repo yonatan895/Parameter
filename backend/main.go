@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
-	"strconv"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
+
 )
 
 var store Store
@@ -18,22 +17,42 @@ var store Store
 func main() {
 	ctx := context.Background()
 
-	db, err := pgxpool.New(ctx, "postgres://user:password@localhost:5432/twitter")
+
+	url := os.Getenv("DATABASE_URL")
+	if url == "" {
+		url = "postgres://user:password@localhost:5432/twitter"
+	}
+	var err error
+	store, err = newPGStore(ctx, url)
 	if err != nil {
 		log.Fatalf("failed to connect to postgres: %v", err)
 	}
-	defer db.Close()
-
-	store = newPGStore(db)
+	defer store.Close()
 
 	go generateTraffic(ctx)
 
-	r := setupRouter()
+	r := gin.Default()
+	r.POST("/register", registerHandler)
+	r.POST("/login", loginHandler)
+	r.POST("/messages", authMiddleware, postMessageHandler)
+	r.GET("/feed", authMiddleware, feedHandler)
 
 	log.Println("server running on :8080")
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
 	}
+
+}
+
+func setupRouter(s Store) *gin.Engine {
+	store = s
+	r := gin.Default()
+	r.POST("/register", registerHandler)
+	r.POST("/login", loginHandler)
+	r.POST("/messages", authMiddleware, postMessageHandler)
+	r.GET("/feed", authMiddleware, feedHandler)
+	return r
+
 }
 
 type User struct {
@@ -70,7 +89,9 @@ func loginHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	id, err := store.GetUserID(c, u.Username, u.Password)
+
+	id, err := store.GetUserByCredentials(c, u.Username, u.Password)
+
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
@@ -91,33 +112,31 @@ func authMiddleware(c *gin.Context) {
 }
 
 func postMessageHandler(c *gin.Context) {
-	userID := c.GetString("userID")
-	var m Message
-	if err := c.BindJSON(&m); err != nil {
+	userIDStr := c.GetString("userID")
+	var body struct {
+		Content string `json:"content"`
+	}
+	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	uid, err := strconv.ParseInt(userID, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user"})
-		return
-	}
-	m, err = store.CreateMessage(c, uid, m.Content)
+	var uid int64
+	fmt.Sscanf(userIDStr, "%d", &uid)
+	msg, err := store.CreateMessage(c, uid, body.Content)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, m)
+
+	c.JSON(http.StatusOK, msg)
 }
 
 func feedHandler(c *gin.Context) {
-	userID := c.GetString("userID")
-	uid, err := strconv.ParseInt(userID, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user"})
-		return
-	}
-	feed, err := store.GetFeed(c, uid)
+	userIDStr := c.GetString("userID")
+	var uid int64
+	fmt.Sscanf(userIDStr, "%d", &uid)
+	feed, err := store.ListMessages(c, uid, 20)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -128,19 +147,12 @@ func feedHandler(c *gin.Context) {
 func generateTraffic(ctx context.Context) {
 	for {
 		time.Sleep(5 * time.Second)
-		// Insert a message for user 1 to simulate activity
-		_, err := store.CreateMessage(ctx, 1, fmt.Sprintf("random post #%d", rand.Intn(1000)))
+    
+		_, err := store.CreateMessage(ctx, 1, fmt.Sprintf("random post #%d", time.Now().UnixNano()))
+
 		if err != nil {
 			log.Println("traffic error:", err)
 		}
 	}
 }
 
-func setupRouter() *gin.Engine {
-	r := gin.Default()
-	r.POST("/register", registerHandler)
-	r.POST("/login", loginHandler)
-	r.POST("/messages", authMiddleware, postMessageHandler)
-	r.GET("/feed", authMiddleware, feedHandler)
-	return r
-}

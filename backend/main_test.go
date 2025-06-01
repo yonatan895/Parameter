@@ -7,67 +7,59 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 )
 
-func setupTestServer() *gin.Engine {
-	store = newMemoryStore()
-	return setupRouter()
-}
+func TestHandlers(t *testing.T) {
+	s := newMemoryStore()
+	router := setupRouter(s)
 
-type credentials struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-func TestRegisterLoginPostFeed(t *testing.T) {
-	r := setupTestServer()
-
-	// Register user
-	regBody, _ := json.Marshal(credentials{Username: "alice", Password: "pw"})
+	// register
+	reqBody := bytes.NewBufferString(`{"username":"alice","password":"pw"}`)
+	req := httptest.NewRequest(http.MethodPost, "/register", reqBody)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/register", bytes.NewBuffer(regBody))
-	r.ServeHTTP(w, req)
+	router.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("register failed: %d", w.Code)
+		t.Fatalf("register failed: %s", w.Body.String())
+	}
+	var user User
+	if err := json.Unmarshal(w.Body.Bytes(), &user); err != nil {
+		t.Fatal(err)
 	}
 
-	// Login user
+	// login
+	reqBody = bytes.NewBufferString(`{"username":"alice","password":"pw"}`)
+	req = httptest.NewRequest(http.MethodPost, "/login", reqBody)
 	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("POST", "/login", bytes.NewBuffer(regBody))
-	r.ServeHTTP(w, req)
+	router.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("login failed: %d", w.Code)
+		t.Fatalf("login failed: %s", w.Body.String())
 	}
-	cookies := w.Result().Cookies()
-	if len(cookies) == 0 {
-		t.Fatal("no session cookie")
-	}
-	session := cookies[0]
+	cookie := w.Result().Cookies()[0]
 
-	// Post message
-	msgBody := []byte(`{"content":"hello"}`)
+	// post message
+	reqBody = bytes.NewBufferString(`{"content":"hello"}`)
+	req = httptest.NewRequest(http.MethodPost, "/messages", reqBody)
+	req.AddCookie(cookie)
 	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("POST", "/messages", bytes.NewBuffer(msgBody))
-	req.AddCookie(session)
-	r.ServeHTTP(w, req)
+	router.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("post failed: %d", w.Code)
+		t.Fatalf("post failed: %s", w.Body.String())
 	}
 
-	// Fetch feed
+	// feed
+	req = httptest.NewRequest(http.MethodGet, "/feed", nil)
+	req.AddCookie(cookie)
 	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/feed", nil)
-	req.AddCookie(session)
-	r.ServeHTTP(w, req)
+	router.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("feed failed: %d", w.Code)
+		t.Fatalf("feed failed: %s", w.Body.String())
 	}
-	var feed []Message
-	if err := json.Unmarshal(w.Body.Bytes(), &feed); err != nil {
-		t.Fatalf("invalid feed: %v", err)
+	var msgs []Message
+	if err := json.Unmarshal(w.Body.Bytes(), &msgs); err != nil {
+		t.Fatal(err)
 	}
-	if len(feed) != 1 || feed[0].Content != "hello" {
-		t.Fatalf("unexpected feed: %+v", feed)
+	if len(msgs) != 1 || msgs[0].Content != "hello" {
+		t.Fatalf("unexpected feed: %+v", msgs)
+
 	}
 }
