@@ -15,6 +15,7 @@ spec:
       containers:
         - name: kafka
           image: {{ .Values.kafka.image }}
+
           env:
             - name: KAFKA_CFG_ZOOKEEPER_CONNECT
               value: zookeeper:2181

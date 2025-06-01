@@ -18,14 +18,22 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 
 
 ## Quickstart
-Run the provided script to build the Docker images, start Minikube with the
-Docker driver and deploy everything:
+Run the provided `setup.sh` script to spin up the entire stack:
 
 ```bash
+chmod +x setup.sh  # make sure the script is executable
 ./setup.sh
 ```
-The script will ensure you are in the `docker` group, generate `go.sum` with
-`go mod tidy` if needed, build the images and load the database schema.
+
+The script performs the following steps:
+
+1. Verifies Docker permissions and adds you to the `docker` group if required.
+2. Starts Minikube using the Docker driver.
+3. Exports Minikube's Docker environment and builds the `backend` and
+   `frontend` images so they are available inside the cluster.
+4. Deploys the Helm chart located in `helm-chart/`.
+5. Waits for the Postgres pod to be ready and loads `backend/schema.sql` into
+   the database.
 
 
 ## Backend
@@ -59,6 +67,7 @@ The steps below outline what the script performs manually.
 2. Load images into the cluster (or push them to a registry accessible by the cluster):
    ```bash
 eval $(minikube docker-env)
+
 
 (cd backend && go mod tidy)
 docker build -t backend:latest ./backend

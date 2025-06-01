@@ -19,3 +19,4 @@ minio:
     image: bitnami/kafka:latest
   zookeeper:
     image: bitnami/zookeeper:latest
+
