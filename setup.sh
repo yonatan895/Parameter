@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -9,8 +8,10 @@ if ! groups $USER_NAME | grep -q '\bdocker\b'; then
   sudo usermod -aG docker $USER_NAME && newgrp docker
 fi
 
+
 # Run go tidy
 (cd backend && go mod tidy && cd ..)
+
 
 # Start minikube with docker driver
 minikube start --driver=docker
