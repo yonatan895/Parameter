@@ -96,12 +96,13 @@ kubectl exec -it deployment/postgres -- psql -U user -d twitter -f /schema.sql
 Adjust credentials if you changed them in `values.yaml`.
 
 ## Testing
-The backend includes unit tests for the HTTP handlers. Run them with:
+Run unit tests for the backend with:
+
 ```bash
 cd backend
+go mod tidy # ensures dependencies are present
 go test ./...
 ```
-Frontend tests can be added using your favourite framework (for example Jest with React Testing Library).
 
 ## Notes
 This project is intentionally simple and aims to provide a starting point. Feel free to extend authentication, add more APIs, or integrate Kafka consumers and producers for real-time updates.

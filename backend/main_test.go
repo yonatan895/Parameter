@@ -6,60 +6,49 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
 )
 
 func TestHandlers(t *testing.T) {
-	s := newMemoryStore()
-	router := setupRouter(s)
+	store = newMemoryStore()
+	r := setupRouter()
 
-	// register
-	reqBody := bytes.NewBufferString(`{"username":"alice","password":"pw"}`)
-	req := httptest.NewRequest(http.MethodPost, "/register", reqBody)
+	body, _ := json.Marshal(map[string]string{"username": "alice", "password": "secret"})
+	req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("register failed: %s", w.Body.String())
-	}
-	var user User
-	if err := json.Unmarshal(w.Body.Bytes(), &user); err != nil {
-		t.Fatal(err)
+		t.Fatalf("register status %d", w.Code)
 	}
 
-	// login
-	reqBody = bytes.NewBufferString(`{"username":"alice","password":"pw"}`)
-	req = httptest.NewRequest(http.MethodPost, "/login", reqBody)
+	req = httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(body))
 	w = httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("login failed: %s", w.Body.String())
+		t.Fatalf("login status %d", w.Code)
 	}
 	cookie := w.Result().Cookies()[0]
 
-	// post message
-	reqBody = bytes.NewBufferString(`{"content":"hello"}`)
-	req = httptest.NewRequest(http.MethodPost, "/messages", reqBody)
+	msgBody, _ := json.Marshal(map[string]string{"content": "hello"})
+	req = httptest.NewRequest(http.MethodPost, "/messages", bytes.NewBuffer(msgBody))
 	req.AddCookie(cookie)
 	w = httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("post failed: %s", w.Body.String())
+		t.Fatalf("post message status %d", w.Code)
 	}
 
-	// feed
 	req = httptest.NewRequest(http.MethodGet, "/feed", nil)
 	req.AddCookie(cookie)
 	w = httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("feed failed: %s", w.Body.String())
+		t.Fatalf("feed status %d", w.Code)
 	}
-	var msgs []Message
-	if err := json.Unmarshal(w.Body.Bytes(), &msgs); err != nil {
-		t.Fatal(err)
+	var feed []Message
+	if err := json.Unmarshal(w.Body.Bytes(), &feed); err != nil {
+		t.Fatalf("unmarshal feed: %v", err)
 	}
-	if len(msgs) != 1 || msgs[0].Content != "hello" {
-		t.Fatalf("unexpected feed: %+v", msgs)
-
+	if len(feed) != 1 || feed[0].Content != "hello" {
+		t.Fatalf("unexpected feed %#v", feed)
 	}
 }
