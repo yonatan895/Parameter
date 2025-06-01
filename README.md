@@ -68,7 +68,8 @@ The steps below outline what the script performs manually.
    ```bash
    eval $(minikube docker-env)
 
-   (cd backend && go mod tidy)
+
+    (cd backend && go mod tidy)
    docker build -t backend:latest ./backend
    docker build -t frontend:latest ./frontend
    ```
