@@ -15,6 +15,12 @@ spec:
       containers:
         - name: kafka
           image: {{ .Values.kafka.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+              value: zookeeper:2181
+            - name: ALLOW_PLAINTEXT_LISTENER
+              value: "yes"
           ports:
             - containerPort: 9092
 ---
