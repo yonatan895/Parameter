@@ -15,6 +15,19 @@ spec:
       containers:
         - name: kafka
           image: {{ .Values.kafka.image }}
+          env:
+            - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+              value: zookeeper:2181
+            - name: KAFKA_CFG_PROCESS_ROLES
+              value: "broker"
+            - name: KAFKA_CFG_NODE_ID
+              value: "0"
+            - name: KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "PLAINTEXT:PLAINTEXT"
+            - name: KAFKA_CFG_ADVERTISED_LISTENERS
+              value: PLAINTEXT://kafka:9092
+            - name: KAFKA_CFG_LISTENERS
+              value: PLAINTEXT://:9092
           ports:
             - containerPort: 9092
 ---

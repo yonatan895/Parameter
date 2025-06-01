@@ -61,6 +61,7 @@ func registerHandler(c *gin.Context) {
 		return
 	}
 	id, err := store.CreateUser(c, u.Username, u.Password)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

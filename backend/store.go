@@ -76,6 +76,7 @@ func (p *pgStore) GetFeed(ctx context.Context, userID int64) ([]Message, error) 
 	}
 	defer rows.Close()
 	var feed []Message
+
 	for rows.Next() {
 		var m Message
 		if err := rows.Scan(&m.ID, &m.UserID, &m.Content, &m.CreatedAt); err != nil {
@@ -143,6 +144,7 @@ func (m *memoryStore) GetFeed(ctx context.Context, userID int64) ([]Message, err
 	for i := len(m.messages) - 1; i >= 0 && len(feed) < 20; i-- {
 		if m.messages[i].UserID == userID {
 			feed = append(feed, m.messages[i])
+
 		}
 	}
 	return feed, nil
