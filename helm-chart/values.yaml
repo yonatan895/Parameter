@@ -15,5 +15,7 @@ minio:
   image: minio/minio:latest
   accessKey: minio
   secretKey: minio123
-kafka:
-  image: bitnami/kafka:latest
+  kafka:
+    image: bitnami/kafka:latest
+  zookeeper:
+    image: bitnami/zookeeper:latest
