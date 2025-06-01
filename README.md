@@ -16,6 +16,7 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 - [Helm](https://helm.sh/)
 - [ArgoCD](https://argo-cd.readthedocs.io/)
 
+
 ## Quickstart
 The `setup.sh` script automates local deployment. It adds your user to the
 `docker` group, starts minikube with the Docker driver, builds images, deploys
