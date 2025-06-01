@@ -9,9 +9,8 @@ if ! groups $USER_NAME | grep -q '\bdocker\b'; then
 fi
 
 
-# Run go tidy
-(cd backend && go mod tidy && cd ..)
-
+# Run go mod tidy so dependencies are available
+(cd backend && go mod tidy)
 
 # Start minikube with docker driver
 minikube start --driver=docker
