@@ -1,15 +1,18 @@
 
 #!/usr/bin/env bash
-set -euo pipefail
-
+set -eoux pipefail
 # Ensure current user can run docker
-sudo usermod -aG docker $USER && newgrp docker
+if ! groups $USER | grep -q docker; then
+  echo "Adding $USER to docker group. Please log out and log back in, then re-run this script."
+  sudo usermod -aG docker $USER
+  exit 1
+fi
 
 # Start minikube with docker driver
 minikube start --driver=docker
 
 # Use docker from minikube
-eval $(minikube docker-env)
+eval $(minikube docker-env --shell bash)
 
 # Build Docker images
 docker build -t backend:latest ./backend

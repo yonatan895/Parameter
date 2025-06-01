@@ -15,22 +15,9 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) and [minikube](https://minikube.sigs.k8s.io/docs/) or any Kubernetes cluster
 - [Helm](https://helm.sh/)
 - [ArgoCD](https://argo-cd.readthedocs.io/)
-
-
 ## Quickstart
-The `setup.sh` script automates local deployment. It adds your user to the
-`docker` group, starts minikube with the Docker driver, builds images, deploys
-the Helm chart and initializes the database.
+Run `./setup.sh` to automatically start minikube, build the images and deploy the chart.
 
-```bash
-./setup.sh
-```
-
-Once complete, access the frontend with:
-
-```bash
-minikube service frontend --url
-```
 
 ## Backend
 The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
@@ -38,7 +25,7 @@ The backend lives in `backend/` and exposes a small REST API using Gin. Configur
 ### Build image
 ```bash
 cd backend
-go mod tidy   # generate go.sum
+go mod tidy # generate go.sum
 docker build -t backend:latest .
 ```
 
@@ -54,20 +41,19 @@ docker build -t frontend:latest .
 ```
 
 ## Running locally with Minikube
-The following manual steps mirror what `setup.sh` does automatically.
-1. Start minikube (using the Docker driver):
+1. Start minikube:
    ```bash
    minikube start --driver=docker
    ```
 2. Load images into the cluster (or push them to a registry accessible by the cluster):
    ```bash
-   eval $(minikube docker-env)
+   eval $(minikube docker-env --shell bash)
    docker build -t backend:latest ./backend
    docker build -t frontend:latest ./frontend
    ```
 3. Deploy the stack using Helm:
    ```bash
-   helm upgrade --install twitter-clone ./helm-chart
+   helm install twitter-clone ./helm-chart
    ```
 4. Access the frontend:
    ```bash
