@@ -16,7 +16,7 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 - [Helm](https://helm.sh/)
 - [ArgoCD](https://argo-cd.readthedocs.io/)
 ## Quickstart
-Run `./setup.sh` to automatically start minikube, build the images and deploy the chart.
+Run `bash setup.sh` to automatically start minikube, build the images and deploy the chart.
 
 
 ## Backend
