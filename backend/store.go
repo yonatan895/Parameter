@@ -2,114 +2,130 @@ package main
 
 import (
 	"context"
-	"fmt"
+
+	"errors"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Store abstracts database operations so they can be backed by Postgres or an in-memory implementation for tests.
 type Store interface {
-	CreateUser(ctx context.Context, username, password string) (int64, error)
-	GetUserByCredentials(ctx context.Context, username, password string) (int64, error)
+	CreateUser(ctx context.Context, username, password string) (User, error)
+	GetUserByCredentials(ctx context.Context, username, password string) (User, error)
 	CreateMessage(ctx context.Context, userID int64, content string) (Message, error)
-	ListMessages(ctx context.Context, userID int64, limit int) ([]Message, error)
-	Close()
+	GetFeed(ctx context.Context, userID int64) ([]Message, error)
 }
 
+// pgStore implements Store using a Postgres database.
 type pgStore struct {
 	db *pgxpool.Pool
 }
 
-func newPGStore(ctx context.Context, url string) (*pgStore, error) {
-	pool, err := pgxpool.New(ctx, url)
+func newPGStore(db *pgxpool.Pool) Store {
+	return &pgStore{db: db}
+}
+
+func (p *pgStore) CreateUser(ctx context.Context, username, password string) (User, error) {
+	var u User
+	err := p.db.QueryRow(ctx, "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id", username, password).Scan(&u.ID)
 	if err != nil {
-		return nil, err
+		return u, err
 	}
-	return &pgStore{db: pool}, nil
+	u.Username = username
+	u.Password = password
+	return u, nil
 }
 
-func (p *pgStore) CreateUser(ctx context.Context, username, password string) (int64, error) {
-	var id int64
-	err := p.db.QueryRow(ctx, "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id", username, password).Scan(&id)
-	return id, err
-}
-
-func (p *pgStore) GetUserByCredentials(ctx context.Context, username, password string) (int64, error) {
-	var id int64
-	err := p.db.QueryRow(ctx, "SELECT id FROM users WHERE username=$1 AND password=$2", username, password).Scan(&id)
-	return id, err
+func (p *pgStore) GetUserByCredentials(ctx context.Context, username, password string) (User, error) {
+	var u User
+	row := p.db.QueryRow(ctx, "SELECT id, username, password FROM users WHERE username=$1 AND password=$2", username, password)
+	if err := row.Scan(&u.ID, &u.Username, &u.Password); err != nil {
+		return u, err
+	}
+	return u, nil
 }
 
 func (p *pgStore) CreateMessage(ctx context.Context, userID int64, content string) (Message, error) {
 	var m Message
 	err := p.db.QueryRow(ctx, "INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING id, created_at", userID, content).Scan(&m.ID, &m.CreatedAt)
+
+	if err != nil {
+		return m, err
+	}
 	m.UserID = userID
 	m.Content = content
-	return m, err
+	return m, nil
 }
 
-func (p *pgStore) ListMessages(ctx context.Context, userID int64, limit int) ([]Message, error) {
-	rows, err := p.db.Query(ctx, "SELECT id, user_id, content, created_at FROM messages WHERE user_id=$1 ORDER BY created_at DESC LIMIT $2", userID, limit)
+func (p *pgStore) GetFeed(ctx context.Context, userID int64) ([]Message, error) {
+	rows, err := p.db.Query(ctx, "SELECT id, user_id, content, created_at FROM messages WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20", userID)
+
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var msgs []Message
+	var feed []Message
 
 	for rows.Next() {
 		var m Message
 		if err := rows.Scan(&m.ID, &m.UserID, &m.Content, &m.CreatedAt); err != nil {
 			return nil, err
 		}
-
-		msgs = append(msgs, m)
+		feed = append(feed, m)
 	}
-	return msgs, nil
+	return feed, nil
 }
 
-func (p *pgStore) Close() {
-	p.db.Close()
-}
-
-type memoryStore struct {
+// memStore is an in-memory Store implementation used for tests.
+type memStore struct {
+	mu       sync.Mutex
+	nextUID  int64
+	nextMID  int64
 	users    []User
 	messages []Message
 }
 
-func newMemoryStore() *memoryStore {
-	return &memoryStore{}
+func newMemoryStore() Store { return &memStore{} }
+
+func (m *memStore) CreateUser(ctx context.Context, username, password string) (User, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.nextUID++
+	u := User{ID: m.nextUID, Username: username, Password: password}
+	m.users = append(m.users, u)
+	return u, nil
 }
 
-func (m *memoryStore) CreateUser(ctx context.Context, username, password string) (int64, error) {
-	id := int64(len(m.users) + 1)
-	m.users = append(m.users, User{ID: id, Username: username, Password: password})
-	return id, nil
-}
-
-func (m *memoryStore) GetUserByCredentials(ctx context.Context, username, password string) (int64, error) {
+func (m *memStore) GetUserByCredentials(ctx context.Context, username, password string) (User, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	for _, u := range m.users {
 		if u.Username == username && u.Password == password {
-			return u.ID, nil
+			return u, nil
 		}
 	}
-	return 0, fmt.Errorf("invalid credentials")
+	return User{}, errors.New("user not found")
 }
 
-func (m *memoryStore) CreateMessage(ctx context.Context, userID int64, content string) (Message, error) {
-	msg := Message{ID: int64(len(m.messages) + 1), UserID: userID, Content: content, CreatedAt: time.Now()}
+func (m *memStore) CreateMessage(ctx context.Context, userID int64, content string) (Message, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.nextMID++
+	msg := Message{ID: m.nextMID, UserID: userID, Content: content, CreatedAt: time.Now()}
 	m.messages = append(m.messages, msg)
 	return msg, nil
 }
 
-func (m *memoryStore) ListMessages(ctx context.Context, userID int64, limit int) ([]Message, error) {
-	res := []Message{}
-	for i := len(m.messages) - 1; i >= 0 && len(res) < limit; i-- {
-		if m.messages[i].UserID == userID {
-			res = append(res, m.messages[i])
+func (m *memStore) GetFeed(ctx context.Context, userID int64) ([]Message, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var feed []Message
+	for _, msg := range m.messages {
+		if msg.UserID == userID {
+			feed = append(feed, msg)
 		}
 	}
-	return res, nil
+	return feed, nil
 }
-
-func (m *memoryStore) Close() {}
-
