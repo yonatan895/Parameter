@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: {{ .Values.minio.image }}
+          args:
+            - server
+            - /data
+          env:
+            - name: MINIO_ROOT_USER
+              value: {{ .Values.minio.accessKey }}
+            - name: MINIO_ROOT_PASSWORD
+              value: {{ .Values.minio.secretKey }}
+          ports:
+            - containerPort: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+spec:
+  selector:
+    app: minio
+  ports:
+    - port: 9000
+      targetPort: 9000
