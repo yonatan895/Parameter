@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 set -eoux pipefail
 # Ensure current user can run docker

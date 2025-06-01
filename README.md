@@ -18,6 +18,7 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 ## Quickstart
 Run `./setup.sh` to automatically start minikube, build the images and deploy the chart.
 
+
 ## Backend
 The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
 
