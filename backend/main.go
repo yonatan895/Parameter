@@ -38,6 +38,7 @@ func main() {
 
 	r := setupRouter()
 
+
 	log.Println("server running on :8080")
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
@@ -63,7 +64,9 @@ func registerHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
+
 	created, err := store.CreateUser(c, u.Username, u.Password)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -77,7 +80,9 @@ func loginHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
+
 	found, err := store.GetUserByCredentials(c, u.Username, u.Password)
+
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
@@ -109,6 +114,7 @@ func postMessageHandler(c *gin.Context) {
 		return
 	}
 	msg, err := store.CreateMessage(c, id, m.Content)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -124,6 +130,7 @@ func feedHandler(c *gin.Context) {
 		return
 	}
 	feed, err := store.GetFeed(c, id)
+  
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -138,6 +145,7 @@ func setupRouter() *gin.Engine {
 	r.POST("/messages", authMiddleware, postMessageHandler)
 	r.GET("/feed", authMiddleware, feedHandler)
 	return r
+
 }
 
 func generateTraffic(ctx context.Context) {

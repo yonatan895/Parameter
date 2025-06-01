@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"errors"
 	"sync"
 	"time"
@@ -49,6 +50,7 @@ func (p *pgStore) GetUserByCredentials(ctx context.Context, username, password s
 func (p *pgStore) CreateMessage(ctx context.Context, userID int64, content string) (Message, error) {
 	var m Message
 	err := p.db.QueryRow(ctx, "INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING id, created_at", userID, content).Scan(&m.ID, &m.CreatedAt)
+
 	if err != nil {
 		return m, err
 	}
@@ -59,11 +61,13 @@ func (p *pgStore) CreateMessage(ctx context.Context, userID int64, content strin
 
 func (p *pgStore) GetFeed(ctx context.Context, userID int64) ([]Message, error) {
 	rows, err := p.db.Query(ctx, "SELECT id, user_id, content, created_at FROM messages WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20", userID)
+
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	var feed []Message
+
 	for rows.Next() {
 		var m Message
 		if err := rows.Scan(&m.ID, &m.UserID, &m.Content, &m.CreatedAt); err != nil {
