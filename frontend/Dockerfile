@@ -1,9 +1,12 @@
 FROM node:20-alpine as build
 WORKDIR /app
-COPY package.json tsconfig.json webpack.config.js .
+COPY package.json package-lock.json tsconfig.json webpack.config.js ./
+COPY .eslintrc.js ./
 COPY src ./src
 COPY index.html ./
-RUN npm install && npm run build
+RUN npm ci
+RUN npm run lint --if-present
+RUN npm run build
 
 FROM nginx:alpine
 COPY --from=build /app/index.html /usr/share/nginx/html/index.html

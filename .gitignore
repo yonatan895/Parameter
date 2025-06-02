@@ -4,7 +4,6 @@
 
 # Node
 node_modules/
-frontend/package-lock.json
 frontend/dist/
 
 # Misc
