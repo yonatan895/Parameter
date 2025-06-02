@@ -19,10 +19,12 @@ type pgStore struct {
 	db *pgxpool.Pool
 }
 
+// newPGStore returns a Store implementation backed by Postgres.
 func newPGStore(db *pgxpool.Pool) Store {
 	return &pgStore{db: db}
 }
 
+// CreateUser inserts a new user into the database and returns the created record.
 func (p *pgStore) CreateUser(ctx context.Context, username, password string) (User, error) {
 	var u User
 	err := p.db.QueryRow(ctx, "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id", username, password).Scan(&u.ID)
@@ -34,6 +36,7 @@ func (p *pgStore) CreateUser(ctx context.Context, username, password string) (Us
 	return u, nil
 }
 
+// GetUserByCredentials fetches a user by username and password.
 func (p *pgStore) GetUserByCredentials(ctx context.Context, username, password string) (User, error) {
 	var u User
 	row := p.db.QueryRow(ctx, "SELECT id, username, password FROM users WHERE username=$1 AND password=$2", username, password)
@@ -43,6 +46,7 @@ func (p *pgStore) GetUserByCredentials(ctx context.Context, username, password s
 	return u, nil
 }
 
+// CreateMessage inserts a new message authored by the given user.
 func (p *pgStore) CreateMessage(ctx context.Context, userID int64, content string) (Message, error) {
 	var m Message
 	err := p.db.QueryRow(ctx, "INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING id, created_at", userID, content).Scan(&m.ID, &m.CreatedAt)
@@ -54,6 +58,7 @@ func (p *pgStore) CreateMessage(ctx context.Context, userID int64, content strin
 	return m, nil
 }
 
+// GetFeed returns the 20 most recent messages for the user.
 func (p *pgStore) GetFeed(ctx context.Context, userID int64) ([]Message, error) {
 	rows, err := p.db.Query(ctx, "SELECT id, user_id, content, created_at FROM messages WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20", userID)
 	if err != nil {
@@ -70,5 +75,3 @@ func (p *pgStore) GetFeed(ctx context.Context, userID int64) ([]Message, error) 
 	}
 	return feed, nil
 }
-
-

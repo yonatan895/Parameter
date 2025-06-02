@@ -22,6 +22,8 @@ var (
 	kafkaWriter *kafka.Writer
 )
 
+// main is the entry point of the backend service. It initialises all external
+// dependencies and starts the HTTP server.
 func main() {
 	ctx := context.Background()
 
@@ -76,6 +78,7 @@ type Message struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// registerHandler handles user registration requests.
 func registerHandler(c *gin.Context) {
 	var u User
 	if err := c.BindJSON(&u); err != nil {
@@ -91,6 +94,7 @@ func registerHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, created)
 }
 
+// loginHandler handles user login and sets a session cookie.
 func loginHandler(c *gin.Context) {
 	var u User
 	if err := c.BindJSON(&u); err != nil {
@@ -106,6 +110,8 @@ func loginHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, found)
 }
 
+// authMiddleware ensures a valid session cookie is present before allowing
+// access to protected endpoints.
 func authMiddleware(c *gin.Context) {
 	cookie, err := c.Request.Cookie("session")
 	if err != nil {
@@ -116,6 +122,8 @@ func authMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+// postMessageHandler stores a new message, caches it in Redis and publishes an
+// event to Kafka.
 func postMessageHandler(c *gin.Context) {
 	userID := c.GetString("userID")
 	var m Message
@@ -142,6 +150,7 @@ func postMessageHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, msg)
 }
 
+// feedHandler returns the 20 most recent messages for the authenticated user.
 func feedHandler(c *gin.Context) {
 	userID := c.GetString("userID")
 	id, err := strconv.ParseInt(userID, 10, 64)
@@ -157,6 +166,7 @@ func feedHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, feed)
 }
 
+// setupRouter wires up all HTTP routes and returns the Gin engine.
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 	r.POST("/register", registerHandler)
@@ -166,6 +176,8 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
+// generateTraffic periodically inserts random messages to keep the demo
+// populated with data.
 func generateTraffic(ctx context.Context) {
 	for {
 		time.Sleep(5 * time.Second)

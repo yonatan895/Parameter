@@ -7,6 +7,9 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+// newRedisClient creates and returns a Redis client using the REDIS_ADDR
+// environment variable. If the variable is empty it falls back to
+// localhost.
 func newRedisClient() *redis.Client {
 	addr := os.Getenv("REDIS_ADDR")
 	if addr == "" {
@@ -15,6 +18,8 @@ func newRedisClient() *redis.Client {
 	return redis.NewClient(&redis.Options{Addr: addr})
 }
 
+// newKafkaWriter creates a Kafka writer configured from the KAFKA_ADDR
+// environment variable. It publishes messages to the "events" topic.
 func newKafkaWriter() *kafka.Writer {
 	addr := os.Getenv("KAFKA_ADDR")
 	if addr == "" {

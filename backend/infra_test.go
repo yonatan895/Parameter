@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// TestNewRedisClient verifies that newRedisClient respects the REDIS_ADDR
+// environment variable.
 func TestNewRedisClient(t *testing.T) {
 	if err := os.Setenv("REDIS_ADDR", "127.0.0.1:9999"); err != nil {
 		t.Fatal(err)
@@ -19,6 +21,7 @@ func TestNewRedisClient(t *testing.T) {
 	_ = c.Close()
 }
 
+// TestNewKafkaWriter checks that newKafkaWriter uses KAFKA_ADDR for configuration.
 func TestNewKafkaWriter(t *testing.T) {
 	if err := os.Setenv("KAFKA_ADDR", "127.0.0.1:9093"); err != nil {
 		t.Fatal(err)

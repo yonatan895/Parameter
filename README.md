@@ -1,134 +1,95 @@
 # Twitter Clone
 
-This repository contains a simple twitter-like clone demonstrating a full stack application with Go backend and TypeScript frontend. The project is designed to run locally on Kubernetes using Helm charts and ArgoCD.
+This repository contains a minimal Twitter-like application consisting of a Go backend and a React frontend. It is intended as a learning project demonstrating how to wire common infrastructure components together and deploy them to Kubernetes.
 
 ## Features
+
 - User registration and login
 - Post messages and view a personal feed
-- Artificial traffic generator on the backend
-- Uses Postgres, Redis, Kafka (running in KRaft mode) and Minio
+- Simple traffic generator that inserts random posts
+- Deployment via Helm with Postgres, Redis, Kafka (KRaft) and Minio
+
+## Project layout
+
+```
+backend/   Go API server and Dockerfile
+frontend/  React client and Dockerfile
+helm-chart/ Kubernetes manifests packaged as a chart
+.github/    CI workflow definition
+scripts/    Helper scripts including `setup.sh`
+```
+
+A more detailed explanation of the architecture is available in [docs/architecture.md](docs/architecture.md).
 
 ## Requirements
+
 - [Go](https://golang.org/) 1.20+
 - [Node.js](https://nodejs.org/) 18+
-- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) (for building images)
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) and [minikube](https://minikube.sigs.k8s.io/docs/) or any Kubernetes cluster
+- [Docker](https://www.docker.com/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) and [minikube](https://minikube.sigs.k8s.io/) or another Kubernetes cluster
 - [Helm](https://helm.sh/)
-- [ArgoCD](https://argo-cd.readthedocs.io/)
-
 
 ## Quickstart
-Run the provided `setup.sh` script to spin up the entire stack:
+
+Run the provided script to build the Docker images, start Minikube and deploy everything:
 
 ```bash
-chmod +x setup.sh  # make sure the script is executable
+chmod +x setup.sh
 ./setup.sh
 ```
 
-The script will ensure you are in the `docker` group, run `go mod tidy` to fetch
-dependencies, build the images and load the database schema.
+Once the services are running, access the frontend via the URL printed by `minikube service frontend --url`.
 
-## Continuous Integration
-Pull requests run a GitHub Actions workflow that installs Go and Node
-dependencies, lints the codebase, runs the Go tests and builds the Docker
-images. Cached layers speed up subsequent runs.
+## Configuration
 
+The backend reads several environment variables:
 
+- `DATABASE_URL` – Postgres connection string
+- `REDIS_ADDR` – Redis address (default `localhost:6379`)
+- `KAFKA_ADDR` – Kafka broker address (default `localhost:9092`)
 
-
-## Backend
-The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
-
-Key environment variables:
-
-- `DATABASE_URL` - Postgres connection string
-- `REDIS_ADDR`   - address of the Redis server (default `localhost:6379`)
-- `KAFKA_ADDR`   - address of the Kafka broker (default `localhost:9092`)
-
-### Build image
-```bash
-cd backend
-go mod tidy
-docker build -t backend:latest .
-```
-
-## Frontend
-The frontend is a minimal React + TypeScript application found in `frontend/`.
-
-### Build image
-```bash
-cd frontend
-npm ci
-npm run build
-docker build -t frontend:latest .
-```
-
-## Running locally with Minikube
-The easiest way to run everything is with the `setup.sh` script described above.
-The steps below outline what the script performs manually.
-1. Start minikube:
-   ```bash
-   minikube start
-   ```
-2. Load images into the cluster (or push them to a registry accessible by the cluster):
-   ```bash
-   eval $(minikube docker-env)
-
-
-   (cd backend && go mod tidy)
-   docker build -t backend:latest ./backend
-   docker build -t frontend:latest ./frontend
-   ```
-3. Deploy the stack using Helm:
-   ```bash
-   helm install twitter-clone ./helm-chart
-   ```
-4. Access the frontend:
-   ```bash
-   minikube service frontend --url
-   ```
-
-## Using ArgoCD
-1. Install ArgoCD in your cluster (see the [official docs](https://argo-cd.readthedocs.io/)).
-2. Apply the ArgoCD application manifest:
-   ```bash
-   kubectl apply -f helm-chart/argocd-app.yaml
-   ```
-  ArgoCD will then deploy the chart and keep it in sync with the repository.
+These can be customized in `helm-chart/values.yaml` when deploying to Kubernetes.
 
 ## Testing
-Run the backend unit tests with Go:
-```bash
-cd backend
-go test ./...
-```
 
-## Database setup
-After Postgres is running you can create the tables using the provided schema:
-```bash
-kubectl exec -it deployment/postgres -- psql -U user -d twitter -f /schema.sql
-```
-Adjust credentials if you changed them in `values.yaml`.
+Backend tests and linters:
 
-
-## Testing
-Run the backend unit tests and linter:
 ```bash
 cd backend
 go vet ./...
 go test ./...
 ```
-For the frontend, install dependencies and run ESLint:
+
+Frontend linting and build checks:
+
 ```bash
 cd frontend
 npm ci
 npm run lint
 ```
 
+## Continuous Integration
+
+Pull requests trigger the [GitHub Actions workflow](.github/workflows/ci.yml). The pipeline caches Go modules and Docker layers, runs `golangci-lint`, executes Go tests with coverage, and builds backend and frontend Docker images. Details can be found in [docs/ci.md](docs/ci.md).
+
+## Running manually with Minikube
+
+If you prefer to run the commands manually instead of using `setup.sh`:
+
+1. Start minikube: `minikube start`
+2. Use the minikube Docker daemon: `eval $(minikube docker-env)`
+3. Build images:
+   ```bash
+   docker build -t backend:latest ./backend
+   docker build -t frontend:latest ./frontend
+   ```
+4. Deploy the chart:
+   ```bash
+   helm install twitter-clone ./helm-chart
+   ```
+5. Load the database schema using `kubectl exec` as shown in `setup.sh`.
 
 ## Notes
-This project is intentionally simple and aims to provide a starting point. Feel free to extend authentication, add more APIs, or integrate Kafka consumers and producers for real-time updates.
 
-## Continuous Integration
-This repository uses GitHub Actions to run linting, tests and Docker builds on each pull request. The workflow lives in `.github/workflows/ci.yml`.
+This codebase aims to be simple yet complete enough to serve as a starting point for further experimentation. Feel free to extend authentication, add additional APIs or integrate real Kafka consumers for streaming features.
 
