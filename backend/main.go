@@ -31,6 +31,12 @@ func main() {
         kafkaWriter = newKafkaWriter()
         defer kafkaWriter.Close()
 
+	redisClient = newRedisClient()
+	defer redisClient.Close()
+
+	kafkaWriter = newKafkaWriter()
+	defer kafkaWriter.Close()
+
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		dsn = "postgres://user:password@localhost:5432/twitter"
@@ -148,7 +154,6 @@ func feedHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, feed)
 }
-
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
