@@ -10,8 +10,12 @@ function App() {
   useEffect(() => { fetchFeed(); }, []);
 
   const fetchFeed = async () => {
-    const res = await axios.get('/feed');
-    setFeed(res.data);
+    try {
+      const res = await axios.get('/feed');
+      setFeed(res.data);
+    } catch (err: unknown) {
+      console.error(err);
+    }
   };
 
   const submit = async () => {
