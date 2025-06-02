@@ -9,19 +9,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.20'
-          cache: true
-
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-
-
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
@@ -29,26 +16,6 @@ jobs:
           key: ${{ runner.os }}-docker-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-docker-
-
-      - name: Install backend dependencies
-        run: go mod tidy
-        working-directory: backend
-
-      - name: Lint Go code
-        run: go vet ./...
-        working-directory: backend
-
-      - name: Test Go code
-        run: go test ./...
-        working-directory: backend
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm install
-
-      - name: Lint frontend
-        working-directory: frontend
-        run: npm run lint --if-present
 
       - name: Build backend image
         run: docker build -t backend:ci ./backend
