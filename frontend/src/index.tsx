@@ -17,7 +17,7 @@ const App: React.FC = () => {
     try {
       const res = await axios.get('/feed');
       setFeed(res.data);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
     }
   };
