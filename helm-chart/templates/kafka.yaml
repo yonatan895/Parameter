@@ -18,6 +18,8 @@ spec:
           env:
             - name: KAFKA_CFG_ZOOKEEPER_CONNECT
               value: zookeeper:2181
+            - name: KAFKA_ENABLE_KRAFT
+              value: "no"
             - name: KAFKA_CFG_PROCESS_ROLES
               value: "broker"
             - name: KAFKA_CFG_NODE_ID
@@ -28,6 +30,8 @@ spec:
               value: PLAINTEXT://kafka:9092
             - name: KAFKA_CFG_LISTENERS
               value: PLAINTEXT://:9092
+            - name: ALLOW_PLAINTEXT_LISTENER
+              value: "yes"
           ports:
             - containerPort: 9092
 ---
