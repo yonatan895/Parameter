@@ -1,3 +1,9 @@
+vault:
+  enabled: true
+  role: twitter-clone
+  postgresPath: secret/data/twitter/postgres
+  minioPath: secret/data/twitter/minio
+
 backend:
   image: backend:latest
   replicaCount: 1
@@ -6,14 +12,10 @@ frontend:
   replicaCount: 1
 postgres:
   image: postgres:latest
-  user: user
-  password: password
   db: twitter
 redis:
   image: redis:latest
 minio:
   image: minio/minio:latest
-  accessKey: minio
-  secretKey: minio123
 kafka:
   image: bitnami/kafka:latest
