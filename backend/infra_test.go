@@ -6,7 +6,9 @@ import (
 )
 
 func TestNewRedisClient(t *testing.T) {
-	os.Setenv("REDIS_ADDR", "127.0.0.1:9999")
+	if err := os.Setenv("REDIS_ADDR", "127.0.0.1:9999"); err != nil {
+		t.Fatal(err)
+	}
 	c := newRedisClient()
 	if c == nil {
 		t.Fatal("client nil")
@@ -18,7 +20,9 @@ func TestNewRedisClient(t *testing.T) {
 }
 
 func TestNewKafkaWriter(t *testing.T) {
-	os.Setenv("KAFKA_ADDR", "127.0.0.1:9093")
+	if err := os.Setenv("KAFKA_ADDR", "127.0.0.1:9093"); err != nil {
+		t.Fatal(err)
+	}
 	w := newKafkaWriter()
 	if w == nil {
 		t.Fatal("writer nil")

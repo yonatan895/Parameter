@@ -26,10 +26,18 @@ func main() {
 	ctx := context.Background()
 
 	redisClient = newRedisClient()
-	defer redisClient.Close()
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Println("redis close:", err)
+		}
+	}()
 
 	kafkaWriter = newKafkaWriter()
-	defer kafkaWriter.Close()
+	defer func() {
+		if err := kafkaWriter.Close(); err != nil {
+			log.Println("kafka close:", err)
+		}
+	}()
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {

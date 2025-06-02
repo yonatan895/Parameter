@@ -2,9 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
-	"sync"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -74,54 +71,4 @@ func (p *pgStore) GetFeed(ctx context.Context, userID int64) ([]Message, error) 
 	return feed, nil
 }
 
-// memStore is an in-memory Store implementation used for tests.
-type memStore struct {
-	mu       sync.Mutex
-	nextUID  int64
-	nextMID  int64
-	users    []User
-	messages []Message
-}
 
-func newMemoryStore() Store { return &memStore{} }
-
-func (m *memStore) CreateUser(ctx context.Context, username, password string) (User, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.nextUID++
-	u := User{ID: m.nextUID, Username: username, Password: password}
-	m.users = append(m.users, u)
-	return u, nil
-}
-
-func (m *memStore) GetUserByCredentials(ctx context.Context, username, password string) (User, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	for _, u := range m.users {
-		if u.Username == username && u.Password == password {
-			return u, nil
-		}
-	}
-	return User{}, errors.New("user not found")
-}
-
-func (m *memStore) CreateMessage(ctx context.Context, userID int64, content string) (Message, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.nextMID++
-	msg := Message{ID: m.nextMID, UserID: userID, Content: content, CreatedAt: time.Now()}
-	m.messages = append(m.messages, msg)
-	return msg, nil
-}
-
-func (m *memStore) GetFeed(ctx context.Context, userID int64) ([]Message, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	var feed []Message
-	for _, msg := range m.messages {
-		if msg.UserID == userID {
-			feed = append(feed, msg)
-		}
-	}
-	return feed, nil
-}
