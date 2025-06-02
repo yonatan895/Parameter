@@ -19,8 +19,10 @@
     "ts-loader": "^9.4.3",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "eslint": "^8.56.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0"
+    "eslint": "^8.59.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "@eslint/config-array": "^1.0.0",
+    "@eslint/object-schema": "^1.0.0"
   }
 }
