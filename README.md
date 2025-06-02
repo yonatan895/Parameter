@@ -42,7 +42,10 @@ The backend lives in `backend/` and exposes a small REST API using Gin. Configur
 ### Build image
 ```bash
 cd backend
-go mod tidy
+
+# make sure dependencies are downloaded
+go mod tidy  # generates go.sum
+
 docker build -t backend:latest .
 ```
 
