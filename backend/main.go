@@ -1,25 +1,35 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"strconv"
-	"time"
+        "context"
+        "fmt"
+        "log"
+        "net/http"
+        "os"
+        "strconv"
+        "time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
+        "github.com/gin-gonic/gin"
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/redis/go-redis/v9"
+        "github.com/segmentio/kafka-go"
 )
 
 var (
-	db    *pgxpool.Pool
-	store Store
+        db          *pgxpool.Pool
+        store       Store
+        redisClient *redis.Client
+        kafkaWriter *kafka.Writer
 )
 
 func main() {
-	ctx := context.Background()
+        ctx := context.Background()
+
+        redisClient = newRedisClient()
+        defer redisClient.Close()
+
+        kafkaWriter = newKafkaWriter()
+        defer kafkaWriter.Close()
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
@@ -99,8 +109,8 @@ func authMiddleware(c *gin.Context) {
 }
 
 func postMessageHandler(c *gin.Context) {
-	userID := c.GetString("userID")
-	var m Message
+        userID := c.GetString("userID")
+        var m Message
 	if err := c.BindJSON(&m); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
@@ -110,12 +120,18 @@ func postMessageHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user"})
 		return
 	}
-	msg, err := store.CreateMessage(c, id, m.Content)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, msg)
+        msg, err := store.CreateMessage(c, id, m.Content)
+        if err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+                return
+        }
+        if err := redisClient.Set(c, fmt.Sprintf("message:%d", msg.ID), m.Content, 0).Err(); err != nil {
+                log.Println("redis set:", err)
+        }
+        if err := kafkaWriter.WriteMessages(c, kafka.Message{Value: []byte(m.Content)}); err != nil {
+                log.Println("kafka write:", err)
+        }
+        c.JSON(http.StatusOK, msg)
 }
 
 func feedHandler(c *gin.Context) {
