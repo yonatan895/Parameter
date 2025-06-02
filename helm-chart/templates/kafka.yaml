@@ -28,6 +28,8 @@ spec:
               value: PLAINTEXT://kafka:9092
             - name: KAFKA_CFG_LISTENERS
               value: PLAINTEXT://:9092
+            - name: ALLOW_PLAINTEXT_LISTENER
+              value: "yes"
           ports:
             - containerPort: 9092
 ---
