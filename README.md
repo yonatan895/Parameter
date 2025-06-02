@@ -6,7 +6,7 @@ This repository contains a simple twitter-like clone demonstrating a full stack 
 - User registration and login
 - Post messages and view a personal feed
 - Artificial traffic generator on the backend
-- Uses Postgres, Redis, Kafka and Minio
+- Uses Postgres, Redis, Kafka (running in KRaft mode) and Minio
 
 ## Requirements
 - [Go](https://golang.org/) 1.20+
