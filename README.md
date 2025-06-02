@@ -24,8 +24,17 @@ Run the provided `setup.sh` script to spin up the entire stack:
 chmod +x setup.sh  # make sure the script is executable
 ./setup.sh
 ```
-The script will ensure you are in the `docker` group, run `go mod tidy` to
-download backend dependencies, build the images and load the database schema.
+
+The script will ensure you are in the `docker` group, run `go mod tidy` to fetch
+dependencies, build the images and load the database schema.
+
+## Continuous Integration
+Pull requests run a GitHub Actions workflow that installs Go and Node
+dependencies, lints the codebase, runs the Go tests and builds the Docker
+images. Cached layers speed up subsequent runs.
+
+
+
 
 ## Backend
 The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
@@ -94,6 +103,21 @@ After Postgres is running you can create the tables using the provided schema:
 kubectl exec -it deployment/postgres -- psql -U user -d twitter -f /schema.sql
 ```
 Adjust credentials if you changed them in `values.yaml`.
+
+
+## Testing
+Run the backend unit tests and linter:
+```bash
+cd backend
+go vet ./...
+go test ./...
+```
+For the frontend, install dependencies and run ESLint:
+```bash
+cd frontend
+npm install
+npm run lint
+```
 
 
 ## Notes

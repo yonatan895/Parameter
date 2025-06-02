@@ -9,6 +9,7 @@ if ! groups $USER_NAME | grep -q '\bdocker\b'; then
 fi
 
 # Ensure Go modules are downloaded
+# Run go tidy
 (cd backend && go mod tidy && cd ..)
 
 # Start minikube with docker driver
