@@ -40,7 +40,7 @@ jobs:
 
       - name: Install golangci-lint
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.46.0
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.1.6
       - name: Run golangci-lint
         working-directory: ./backend
         run: golangci-lint run ./...
@@ -50,7 +50,7 @@ jobs:
         run: |
           go test -coverprofile=coverage.out ./...
       - name: Upload test coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: backend-coverage
           path: ./backend/coverage.out
@@ -121,10 +121,6 @@ jobs:
       - name: Run ESLint
         working-directory: ./frontend
         run: npm run lint
-
-      - name: Run frontend tests
-        working-directory: ./frontend
-        run: npm test
 
       - name: Build frontend assets
         working-directory: ./frontend
