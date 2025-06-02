@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-
 // Store abstracts database operations so they can be backed by Postgres or an in-memory implementation for tests.
 type Store interface {
 	CreateUser(ctx context.Context, username, password string) (User, error)
@@ -126,4 +125,3 @@ func (m *memStore) GetFeed(ctx context.Context, userID int64) ([]Message, error)
 	}
 	return feed, nil
 }
-
