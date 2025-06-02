@@ -1,10 +1,11 @@
-FROM node:20-alpine as build
+FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.json webpack.config.js ./
 COPY .eslintrc.js ./
 COPY src ./src
 COPY index.html ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 RUN npm run lint --if-present
 RUN npm run build
 

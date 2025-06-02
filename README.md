@@ -39,6 +39,12 @@ images. Cached layers speed up subsequent runs.
 ## Backend
 The backend lives in `backend/` and exposes a small REST API using Gin. Configuration is done via environment variables. The schema is defined in `backend/schema.sql`.
 
+Key environment variables:
+
+- `DATABASE_URL` - Postgres connection string
+- `REDIS_ADDR`   - address of the Redis server (default `localhost:6379`)
+- `KAFKA_ADDR`   - address of the Kafka broker (default `localhost:9092`)
+
 ### Build image
 ```bash
 cd backend
