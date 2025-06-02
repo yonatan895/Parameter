@@ -1,0 +1,9 @@
+# Go
+/bin/
+*.exe
+
+# Node
+node_modules/
+
+# Misc
+*.log

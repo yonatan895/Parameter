@@ -24,8 +24,14 @@ Docker driver and deploy everything:
 ```bash
 ./setup.sh
 ```
-The script will ensure you are in the `docker` group, generate `go.sum` with
-`go mod tidy` if needed, build the images and load the database schema.
+The script will ensure you are in the `docker` group, run `go mod tidy` to fetch
+dependencies, build the images and load the database schema.
+
+## Continuous Integration
+Pull requests run a GitHub Actions workflow that installs Go and Node
+dependencies, lints the codebase, runs the Go tests and builds the Docker
+images. Cached layers speed up subsequent runs.
+
 
 
 ## Backend
@@ -85,6 +91,20 @@ After Postgres is running you can create the tables using the provided schema:
 kubectl exec -it deployment/postgres -- psql -U user -d twitter -f /schema.sql
 ```
 Adjust credentials if you changed them in `values.yaml`.
+
+## Testing
+Run the backend unit tests and linter:
+```bash
+cd backend
+go vet ./...
+go test ./...
+```
+For the frontend, install dependencies and run ESLint:
+```bash
+cd frontend
+npm install
+npm run lint
+```
 
 ## Notes
 This project is intentionally simple and aims to provide a starting point. Feel free to extend authentication, add more APIs, or integrate Kafka consumers and producers for real-time updates.
