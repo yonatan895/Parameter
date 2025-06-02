@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  push:
+    branches: [ "*" ]
   pull_request:
     branches: [ "*" ]
 jobs:
@@ -9,20 +11,41 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
-          path: /tmp/.docker-cache
-          key: ${{ runner.os }}-docker-${{ github.sha }}
+          path: ~/.cache/buildx
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-docker-
+            ${{ runner.os }}-buildx-
+
+      - name: Build backend builder image
+        run: |
+          docker buildx build --target build -t backend-builder --load ./backend \
+            --cache-from type=local,src=~/.cache/buildx \
+            --cache-to type=local,dest=~/.cache/buildx
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Run backend tests
+        run: docker run --rm backend-builder go test ./...
+        env:
+          DOCKER_BUILDKIT: 1
 
       - name: Build backend image
-        run: docker build -t backend:ci ./backend
+        run: |
+          docker buildx build -t backend:ci --load ./backend \
+            --cache-from type=local,src=~/.cache/buildx \
+            --cache-to type=local,dest=~/.cache/buildx
         env:
           DOCKER_BUILDKIT: 1
 
       - name: Build frontend image
-        run: docker build -t frontend:ci ./frontend
+        run: |
+          docker buildx build -t frontend:ci --load ./frontend \
+            --cache-from type=local,src=~/.cache/buildx \
+            --cache-to type=local,dest=~/.cache/buildx
         env:
           DOCKER_BUILDKIT: 1
