@@ -1,10 +1,14 @@
-
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 
+interface Message {
+  id: string; // Adjust the type if `id` is of a different type (e.g., number).
+  content: string;
+}
+
 function App() {
-  const [feed, setFeed] = useState<any[]>([]);
+  const [feed, setFeed] = useState<Message[]>([]);
   const [content, setContent] = useState('');
 
   useEffect(() => { fetchFeed(); }, []);
@@ -36,4 +40,3 @@ function App() {
 
 const root = createRoot(document.getElementById('root')!);
 root.render(<App />);
-
