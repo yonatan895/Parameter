@@ -104,5 +104,3 @@ go mod tidy # ensures dependencies are present
 go test ./...
 ```
 
-## Notes
-This project is intentionally simple and aims to provide a starting point. Feel free to extend authentication, add more APIs, or integrate Kafka consumers and producers for real-time updates.
