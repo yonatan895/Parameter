@@ -88,3 +88,7 @@ Adjust credentials if you changed them in `values.yaml`.
 
 ## Notes
 This project is intentionally simple and aims to provide a starting point. Feel free to extend authentication, add more APIs, or integrate Kafka consumers and producers for real-time updates.
+
+## Continuous Integration
+This repository uses GitHub Actions to run linting, tests and Docker builds on each pull request. The workflow lives in `.github/workflows/ci.yml`.
+
