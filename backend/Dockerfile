@@ -4,7 +4,8 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -o server . 
+RUN go vet ./... && go test ./...
+RUN go build -o server .
 
 FROM alpine
 WORKDIR /app
