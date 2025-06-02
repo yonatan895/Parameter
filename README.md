@@ -52,7 +52,7 @@ The frontend is a minimal React + TypeScript application found in `frontend/`.
 ### Build image
 ```bash
 cd frontend
-npm install # fetch packages
+npm ci
 npm run build
 docker build -t frontend:latest .
 ```
@@ -115,7 +115,7 @@ go test ./...
 For the frontend, install dependencies and run ESLint:
 ```bash
 cd frontend
-npm install
+npm ci
 npm run lint
 ```
 
