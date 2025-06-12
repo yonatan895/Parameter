@@ -1,11 +1,16 @@
 FROM node:20-alpine AS build
 WORKDIR /app
+
+# Cache dependencies
 COPY package.json package-lock.json tsconfig.json webpack.config.js ./
 COPY .eslintrc.js ./
-COPY src ./src
-COPY index.html ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
+
+# Copy rest of the source after installing dependencies
+COPY src ./src
+COPY index.html ./
+
 RUN npm run lint --if-present
 RUN npm run build
 
