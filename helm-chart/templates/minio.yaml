@@ -1,8 +1,9 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: minio
 spec:
+  serviceName: "minio-headless"
   replicas: 1
   selector:
     matchLabels:
@@ -19,12 +20,35 @@ spec:
             - server
             - /data
           env:
-            - name: MINIO_ROOT_USER
+            - name: MINIO_ACCESS_KEY
               value: {{ .Values.minio.accessKey }}
-            - name: MINIO_ROOT_PASSWORD
+            - name: MINIO_SECRET_KEY
               value: {{ .Values.minio.secretKey }}
           ports:
             - containerPort: 9000
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-headless
+spec:
+  clusterIP: None
+  selector:
+    app: minio
+  ports:
+    - port: 9000
+      targetPort: 9000
 ---
 apiVersion: v1
 kind: Service

@@ -1,6 +1,7 @@
 # Build stage
 FROM golang:1.20-alpine AS build
-WORKDIR /app
+WORKDIR /app 
+
 
 # Cache dependencies
 COPY go.mod go.sum ./
