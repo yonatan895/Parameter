@@ -27,10 +27,6 @@ RUN apk --no-cache add ca-certificates
 # Copy binary
 COPY --from=build /app/server .
 
-# Optionally set non-root user (create user:group 10001:10001)
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
 # Set permissions
 RUN chmod +x /app/server
 
