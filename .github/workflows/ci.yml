@@ -167,6 +167,7 @@ jobs:
 
       - name: Build frontend Docker image
         run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin  
           REPO_NAME=$(echo "ghcr.io/yonatan895/Parameter" | tr '[:upper:]' '[:lower:]')
           docker build -t frontend:${{ github.sha }} ./frontend  # Build the image
           docker tag frontend:${{ github.sha }} $REPO_NAME/frontend:${{ github.sha }}
