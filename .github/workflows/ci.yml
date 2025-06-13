@@ -106,15 +106,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-backend-
 
-      - name: Build backend Docker image
+      - name: Build and Push Docker Image
         run: |
-          docker buildx build \
-            --tag ghcr.io/${{ github.repository }}/backend:${{ github.sha }} \
-            --push ./backend \
-            --cache-from type=local,src=~/.cache/buildx \
-            --cache-to type=local,dest=~/.cache/buildx
-        env:
-          DOCKER_BUILDKIT: 1
+          REPO_NAME=$(echo "ghcr.io/yonatan895/Parameter" | tr '[:upper:]' '[:lower:]')
+          docker tag backend:${{ github.sha }} $REPO_NAME/backend:${{ github.sha }}
+          docker push $REPO_NAME/backend:${{ github.sha }}
+              env:
+                DOCKER_BUILDKIT: 1
 
   build-frontend:
     runs-on: ubuntu-latest
