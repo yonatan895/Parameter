@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: ["*"]
   pull_request:
     branches: ["*"]
 
@@ -163,11 +161,10 @@ jobs:
 
       - name: Build frontend Docker image
         run: |
-          docker buildx build \
-            --tag ghcr.io/${{ github.repository }}/frontend:${{ github.sha }} \
-            --push ./frontend \
-            --cache-from type=local,src=~/.cache/buildx \
-            --cache-to type=local,dest=~/.cache/buildx
+          REPO_NAME=$(echo "ghcr.io/yonatan895/Parameter" | tr '[:upper:]' '[:lower:]')
+          docker build -t frontend:${{ github.sha }} ./frontend  # Build the image
+          docker tag frontend:${{ github.sha }} $REPO_NAME/frontend:${{ github.sha }}
+          docker push $REPO_NAME/frontend:${{ github.sha }}
         env:
           DOCKER_BUILDKIT: 1
 
