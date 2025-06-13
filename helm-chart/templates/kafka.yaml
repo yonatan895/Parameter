@@ -23,7 +23,7 @@ spec:
             - name: KAFKA_CFG_PROCESS_ROLES
               value: "broker,controller"
             - name: KAFKA_CFG_CONTROLLER_QUORUM_VOTERS
-              value: "0@kafka:9093"
+              value: "0@localhost:9093"
             - name: KAFKA_CFG_CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
             - name: KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP
@@ -31,7 +31,7 @@ spec:
             - name: KAFKA_CFG_LISTENERS
               value: "PLAINTEXT://:9092,CONTROLLER://:9093"
             - name: KAFKA_CFG_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://kafka:9092"
+              value: "PLAINTEXT://localhost:9092"
             - name: ALLOW_PLAINTEXT_LISTENER
               value: "yes"
           ports:

@@ -3,10 +3,10 @@ module github.com/example/twitter-clone
 go 1.20
 
 require (
-        github.com/gin-gonic/gin v1.9.0
-        github.com/jackc/pgx/v5 v5.4.0
-        github.com/redis/go-redis/v9 v9.0.0
-        github.com/segmentio/kafka-go v0.4.0
+	github.com/gin-gonic/gin v1.9.0
+	github.com/jackc/pgx/v5 v5.4.0
+	github.com/redis/go-redis/v9 v9.0.0
+	github.com/segmentio/kafka-go v0.4.0
 )
 
 require (
