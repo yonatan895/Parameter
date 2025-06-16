@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: kafka
 spec:
-  replicas: 1
+  replicas: {{ .Values.kafka.replicaCount }}
   selector:
     matchLabels:
       app: kafka

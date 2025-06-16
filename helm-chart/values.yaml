@@ -6,14 +6,18 @@ frontend:
   replicaCount: 1
 postgres:
   image: postgres:latest
+  replicaCount: 1
   user: user
   password: password
   db: twitter
 redis:
   image: redis:latest
+  replicaCount: 1
 minio:
   image: minio/minio:latest
+  replicaCount: 1
   accessKey: minio
   secretKey: minio123
 kafka:
   image: bitnami/kafka:latest
+  replicaCount: 1
