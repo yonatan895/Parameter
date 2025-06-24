@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 
 interface Message {
-  id: string; // Adjust the type if `id` is of a different type (e.g., number).
+  id: string; 
   content: string;
 }
 
