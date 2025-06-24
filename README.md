@@ -89,7 +89,5 @@ If you prefer to run the commands manually instead of using `setup.sh`:
    ```
 5. Load the database schema using `kubectl exec` as shown in `setup.sh`.
 
-## Notes
 
-This codebase aims to be simple yet complete enough to serve as a starting point for further experimentation. Feel free to extend authentication, add additional APIs or integrate real Kafka consumers for streaming features.
 
