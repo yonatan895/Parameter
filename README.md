@@ -28,6 +28,7 @@ A more detailed explanation of the architecture is available in [docs/architectu
 - [Docker](https://www.docker.com/)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) and [minikube](https://minikube.sigs.k8s.io/) or another Kubernetes cluster
 - [Helm](https://helm.sh/)
+- [ArgoCD](https://argo-cd.readthedocs.io/en/stable/)
 
 ## Quickstart
 
